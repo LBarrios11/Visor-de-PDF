@@ -3,14 +3,23 @@ package Clases;
 import java.awt.BorderLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.StringTokenizer;
 
 import javax.swing.*;
 
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.encryption.InvalidPasswordException;
+import org.apache.pdfbox.text.PDFTextStripper;
+
+import com.itextpdf.text.pdf.PdfReader;
+import com.itextpdf.text.pdf.parser.PdfTextExtractor;
 import com.sun.pdfview.*;
 
 public class Principal extends JFrame {
@@ -20,14 +29,19 @@ private	PagePanel panelpdf;
 private	JFileChooser selector;
 	// selector 
 private	PDFFile pdffile;
-	//
+private String ruta="";
 private	int indice=0;
+int al=400,an=300;
 	// indice , cantidad de paginas
 	
 public Principal(){
+
 		panelpdf=new PagePanel();
+		// panel principal
 		JMenuBar barra=new JMenuBar();
+		//
 		JMenu archivo=new JMenu("Archivo");
+		// menu que nos permitira buscar archivos
 		JMenuItem ver=new JMenuItem("Buscar Archivo");
 		ver.addActionListener(new ActionListener(){
 
@@ -39,6 +53,7 @@ public void actionPerformed(ActionEvent e) {
 					try{
 						// obtengo archivo seleccionado por el usuaario
 					File file = selector.getSelectedFile();
+					ruta=file.getAbsolutePath();
 			        RandomAccessFile raf = new RandomAccessFile(file, "r");
 			  
 			        FileChannel channel = raf.getChannel();
@@ -46,6 +61,7 @@ public void actionPerformed(ActionEvent e) {
 			        pdffile = new PDFFile(buf);
 			        PDFPage page = pdffile.getPage(indice);
 			        panelpdf.showPage(page);
+			        panelpdf.setSize(an,al);
 			        repaint();
 					}catch(IOException ioe){
 						JOptionPane.showMessageDialog(null, "Error al abrir el archivo");
@@ -85,19 +101,48 @@ public void actionPerformed(ActionEvent e) {
 
 			public void actionPerformed(ActionEvent e) {
 	         // recorro todas las paginas y cuento la cantidad de palabras
-				int cont1=0,cont2=0;
+				 String text="";
+			     //Loading an existing document
+			      File file = new File(ruta) ;
+			      PDDocument document;
+				try {
+					document = PDDocument.load(file);
+					  PDFTextStripper pdfStripper = new PDFTextStripper() ;
+				      text= pdfStripper.getText(document) ;
+				    //Closing the document
+				      document.close() ;
+				} catch (InvalidPasswordException e1) {
+				
+					e1.printStackTrace();
+				} catch (IOException e1) {
+					// TODO Auto-generated catch block
+					e1.printStackTrace();
+				}
+				String nl = System.getProperty("line.separator");
+			   	   /// cuenta las palabras //
+						StringTokenizer st = new StringTokenizer(text);
+						int cantidad=st.countTokens();
+						  JOptionPane.showMessageDialog(null, "Cantidad de Palabras del documento"
+						    + nl +cantidad);
+
+					    
 				
 				
 			}
 			
 		});
+		// ZOOM
 		JButton Max=new JButton("+");
 		Max.addActionListener(new ActionListener(){
 
 			public void actionPerformed(ActionEvent e) {
-	         // recorro todas las paginas y cuento la cantidad de palabras
-				int cont1=0,cont2=0;
-				
+		
+	        if(al<4000&&an<4000){
+	        al=al+50;
+	        an=an+50;
+	        panelpdf.setSize(an,al);
+	        }
+	       		
 				
 			}
 			
@@ -106,10 +151,11 @@ public void actionPerformed(ActionEvent e) {
 		Min.addActionListener(new ActionListener(){
 
 			public void actionPerformed(ActionEvent e) {
-	         // recorro todas las paginas y cuento la cantidad de palabras
-				int cont1=0,cont2=0;
-			//pikchu estuvo acáXD 
-				// esto es una caca
+				     if(al>50&&an>50){
+				        al=al-50;
+				        an=an-50;
+				        panelpdf.setSize(an,al);}
+	
 			}
 			
 		});
@@ -121,9 +167,13 @@ public void actionPerformed(ActionEvent e) {
 		pabajo.add(Max);
 		pabajo.add(Min);
 		archivo.add(ver);
+		// 
 		barra.add(archivo);
+		//
 		setJMenuBar(barra);
+		
 		add(panelpdf);
+		/// 
 		add(pabajo,BorderLayout.SOUTH);
 	}
 	
